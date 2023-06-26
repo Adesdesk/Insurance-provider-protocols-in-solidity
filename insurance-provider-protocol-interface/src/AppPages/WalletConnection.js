@@ -37,7 +37,7 @@ const WalletConnection = ({ onConnect }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-purple-500 to-pink-500">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-fuchsia-500">
             {walletConnected && (<NavigationBar />)}
             <h2 className="text-2xl text-center text-white font-bold mb-2">
             A blockchain-based insurance protocol provider DApp By Adeola David A.
@@ -45,7 +45,7 @@ const WalletConnection = ({ onConnect }) => {
             <div className="mt-5">
                 {!walletConnected && (
                     <button
-                        className="bg-gradient-to-r from-sky-500 to-indigo-500 text-2xl hover:bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-2 px-4 rounded"
+                        className="bg-gradient-to-r from-violet-900 to-fuchsia-900 text-2xl hover:bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-2 px-4 rounded"
                         onClick={connectWallet}
                     >
                         Connect Ethereum Wallet
