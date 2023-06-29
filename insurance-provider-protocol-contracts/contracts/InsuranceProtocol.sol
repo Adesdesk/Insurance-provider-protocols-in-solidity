@@ -1,138 +1,123 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
-contract InsuranceProtocol {
-    address public admin;
-    uint256 public regularPremium = 100000 wei;
-    uint256 public mediumPremium = 1000000 wei;
-    uint256 public comprehensivePremium = 10000000 wei;
-    uint256 public regularWhitelistDays = 84;
-    uint256 public mediumWhitelistDays = 56;
-    uint256 public comprehensiveWhitelistDays = 28;
+contract InsuranceContract {
+    address public contractOwner;
+    uint256 constant private regularPremium = 100000 wei;
+    uint256 constant private robustPremium = 1000000 wei;
+    uint256 constant private comprehensivePremium = 100000 wei;
+    uint256 constant private paymentInterval = 28 days;
 
-    struct Policy {
-        address walletOwner;
-        uint256 premiumPaid;
+    enum InsurancePackage {Regular, Robust, Comprehensive}
+    enum ClaimStatus {Pending, Approved, Rejected}
+
+    struct User {
+        InsurancePackage package;
+        uint256 premiumAmount;
         uint256 lastPaymentTimestamp;
+        uint256 totalPayments; // New field to store the total payments made by the user
+        bool isActive;
     }
 
-    mapping(address => Policy) public policies;
-    mapping(address => uint256) public whitelistAmounts;  // Amount the whitelisted address can withdraw
-    mapping(address => bool) public whitelistedAddresses;
-    uint256 public commonPoolBalance;
+    mapping(address => User) public users;
+    mapping(address => ClaimStatus) public claims;
 
-    event PolicyCreated(address indexed walletOwner, uint256 premiumPaid);
-    event WhitelistUpdated(address indexed walletOwner, bool whitelisted);
-    event Withdrawal(address indexed walletOwner, uint256 amount);
-    event PaymentMade(address indexed walletOwner, uint256 premiumPaid);
+    constructor() {
+        contractOwner = tx.origin; // prevent the owner address from changing with various deployers
+    }
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "Only the admin can call this function");
+    modifier onlyContractOwner() {
+        require(msg.sender == contractOwner, "Only the contract owner can perform this action.");
         _;
     }
 
-    constructor(address _admin) {
-        admin = _admin;
+    function selectPackage(InsurancePackage _package) external payable {
+        require(_package >= InsurancePackage.Regular && _package <= InsurancePackage.Comprehensive, "Invalid insurance package selected.");
+        require(!users[msg.sender].isActive, "User already has an active insurance package.");
+
+        User storage user = users[msg.sender];
+        user.package = _package;
+        user.isActive = true;
+        user.lastPaymentTimestamp = block.timestamp;
+
+        if (_package == InsurancePackage.Regular) {
+            user.premiumAmount = regularPremium;
+        } else if (_package == InsurancePackage.Robust) {
+            user.premiumAmount = robustPremium;
+        } else if (_package == InsurancePackage.Comprehensive) {
+            user.premiumAmount = comprehensivePremium;
+        }
+
+        // Transfer premium amount to the contract owner
+        require(msg.value >= user.premiumAmount, "Insufficient premium amount.");
+        (bool success, ) = contractOwner.call{value: user.premiumAmount}("");
+        require(success, "Premium transfer failed.");
     }
 
-    function createPolicy(uint256 _premiumPaid) external payable {
-        require(
-            _premiumPaid == regularPremium ||
-            _premiumPaid == mediumPremium ||
-            _premiumPaid == comprehensivePremium,
-            "Invalid premium amount"
-        );
-        require(
-            policies[msg.sender].walletOwner == address(0),
-            "Policy already exists"
-        );
+    function submitClaim() external {
+        require(users[msg.sender].isActive, "User does not have an active insurance package.");
+        require(claims[msg.sender] == ClaimStatus.Pending, "Claim has already been submitted or processed.");
 
-        Policy memory newPolicy = Policy(
-            msg.sender,
-            _premiumPaid,
-            block.timestamp
-        );
-        policies[msg.sender] = newPolicy;
-
-        commonPoolBalance += msg.value;
-
-        emit PolicyCreated(msg.sender, _premiumPaid);
+        claims[msg.sender] = ClaimStatus.Pending;
     }
 
-    function makePayment() external payable {
-        Policy storage policy = policies[msg.sender];
-        require(policy.walletOwner != address(0), "Policy does not exist");
+    function approveClaim(address _user) external onlyContractOwner {
+        require(users[_user].isActive, "User does not have an active insurance package.");
+        require(claims[_user] == ClaimStatus.Pending, "No pending claim for this user.");
 
-        uint256 premiumDueTimestamp = policy.lastPaymentTimestamp + 28 days;
-        require(
-            block.timestamp >= premiumDueTimestamp,
-            "Payment is not due yet"
-        );
-
-        uint256 premiumPaid = policy.premiumPaid;
-        require(msg.value == premiumPaid, "Incorrect payment amount");
-
-        commonPoolBalance += msg.value;
-        policy.lastPaymentTimestamp = block.timestamp;
-
-        emit PaymentMade(msg.sender, msg.value);
+        claims[_user] = ClaimStatus.Approved;
+        uint256 claimPayout = users[_user].totalPayments * 2; // Payout value is twice the total payments made by the user
+        (bool success, ) = _user.call{value: claimPayout}("");
+        require(success, "Claim payout failed.");
     }
 
-    function makeClaim(uint256 _amount) external {
-        require(whitelistedAddresses[msg.sender], "Address is not whitelisted");
-        require(
-            _amount <= whitelistAmounts[msg.sender],
-            "Exceeds the allowed withdrawal amount"
-        );
-        require(
-            _amount <= commonPoolBalance,
-            "Insufficient balance in the common pool"
-        );
+    function rejectClaim(address _user) external onlyContractOwner {
+        require(users[_user].isActive, "User does not have an active insurance package.");
+        require(claims[_user] == ClaimStatus.Pending, "No pending claim for this user.");
 
-        commonPoolBalance -= _amount;
-        whitelistAmounts[msg.sender] -= _amount;
-        payable(msg.sender).transfer(_amount);
-
-        emit Withdrawal(msg.sender, _amount);
+        claims[_user] = ClaimStatus.Rejected;
     }
 
-    function withdrawFromCommonPool(uint256 _amount) external onlyAdmin {
-        require(
-            _amount <= commonPoolBalance,
-            "Insufficient balance in the common pool"
-        );
+    function cancelInsurance() external {
+        require(users[msg.sender].isActive, "User does not have an active insurance package.");
 
-        commonPoolBalance -= _amount;
-        payable(admin).transfer(_amount);
-
-        emit Withdrawal(admin, _amount);
+        users[msg.sender].isActive = false;
     }
 
-    function getPolicyDetails(
-        address _walletOwner
-    ) external view returns (address, uint256, uint256) {
-        Policy memory policy = policies[_walletOwner];
-        return (
-            policy.walletOwner,
-            policy.premiumPaid,
-            policy.lastPaymentTimestamp
-        );
+    function withdrawFunds() external onlyContractOwner {
+        (bool success, ) = contractOwner.call{value: address(this).balance}("");
+        require(success, "Withdrawal failed.");
     }
 
-    function whitelistAddress(address _user, uint256 _amount) external onlyAdmin {
-        require(policies[_user].walletOwner != address(0), "Policy does not exist");
-
-        whitelistedAddresses[_user] = true;
-        whitelistAmounts[_user] = _amount;
-
-        emit WhitelistUpdated(_user, true);
+    function getContractBalance() external view onlyContractOwner returns (uint256) {
+        return address(this).balance;
     }
 
-    function updateWhitelist(address _user, bool _whitelisted) external onlyAdmin {
-        require(policies[_user].walletOwner != address(0), "Policy does not exist");
+    function checkPremiumPayment() external payable {
+    User storage user = users[msg.sender];
+    require(user.isActive, "User does not have an active insurance package.");
 
-        whitelistedAddresses[_user] = _whitelisted;
+    uint256 elapsedTime = block.timestamp - user.lastPaymentTimestamp;
+    uint256 missedPayments = elapsedTime / paymentInterval;
+    uint256 paymentDue = user.lastPaymentTimestamp + (missedPayments * paymentInterval);
 
-        emit WhitelistUpdated(_user, _whitelisted);
+    require(block.timestamp >= paymentDue, "Premium payment is not yet due.");
+
+    // Calculate the number of premiums due
+    uint256 premiumsDue = missedPayments + 1;
+
+    // Calculate the total premium amount due
+    uint256 totalPremiumAmountDue = premiumsDue * user.premiumAmount;
+
+    // Transfer premium amount to the contract owner
+    require(msg.value >= totalPremiumAmountDue, "Insufficient premium amount.");
+    (bool success, ) = contractOwner.call{value: totalPremiumAmountDue}("");
+    require(success, "Premium transfer failed.");
+
+    // Update last payment timestamp
+    user.lastPaymentTimestamp = paymentDue;
+
+    // Update total payments made by the user
+    user.totalPayments += premiumsDue;
     }
 }
