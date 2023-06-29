@@ -8,11 +8,17 @@ contract InsuranceProtocolFactory {
     address[] public insuranceContracts;
     
     event InsuranceContractCreated(address indexed insuranceContract, address indexed walletOwner);
+
+    address public admin;
+    
+    constructor() {
+        admin = msg.sender;
+    }
     
     function createInsuranceContract() external {
         require(userToInsuranceContract[msg.sender] == address(0), "Insurance contract already exists for the user");
         
-        InsuranceProtocol newInsuranceContract = new InsuranceProtocol();
+        InsuranceProtocol newInsuranceContract = new InsuranceProtocol(admin);
         insuranceContracts.push(address(newInsuranceContract));
         userToInsuranceContract[msg.sender] = address(newInsuranceContract);
         

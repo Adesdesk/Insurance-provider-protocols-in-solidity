@@ -8,41 +8,39 @@ const hre = require("hardhat");
 const { ethers } = require("hardhat");
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
+  const [deployer, escrow, testAccount] = await ethers.getSigners();
 
-  console.log("Deploying contracts with the account:", deployer.address);
-
-  // Deploy CollateralProtectionFactory contract
+  console.log("Deploying CollateralProtectionFactory with the account:", deployer.address);
+  
   const CollateralProtectionFactory = await ethers.getContractFactory("CollateralProtectionFactory");
-  const collateralProtectionFactory = await CollateralProtectionFactory.deploy();
+  
+  // Set the address of the escrow to be used as the constructor argument
+  const escrowAddress = escrow.address;
+
+  // Deploy the CollateralProtectionFactory contract
+  const collateralProtectionFactory = await CollateralProtectionFactory.deploy(escrowAddress);
   await collateralProtectionFactory.deployed();
 
-  console.log("CollateralProtectionFactory contract deployed at:", collateralProtectionFactory.address);
+  console.log("CollateralProtectionFactory contract deployed to:", collateralProtectionFactory.address);
+  console.log("Escrow address:", escrowAddress);
 
-  // Deploy CollateralProtection contract using CollateralProtectionFactory
-  const deployTransaction = await collateralProtectionFactory.deployCollateralProtection();
-  await deployTransaction.wait();
 
-  const userContractAddress = await collateralProtectionFactory.getCollateralProtectionContract(deployer.address);
-  console.log("CollateralProtection contract deployed for user", deployer.address, "at:", userContractAddress);
 
-  // Deploy InsuranceProtocolFactory contract
+  // Deploy the InsuranceProtocolFactory contract
+  console.log("Deploying InsuranceProtocolFactory with the account:", deployer.address);
   const InsuranceProtocolFactory = await ethers.getContractFactory("InsuranceProtocolFactory");
   const insuranceProtocolFactory = await InsuranceProtocolFactory.deploy();
+
   await insuranceProtocolFactory.deployed();
 
-  console.log("InsuranceProtocolFactory contract deployed at:", insuranceProtocolFactory.address);
+  console.log("InsuranceProtocolFactory contract deployed to:", insuranceProtocolFactory.address);
 
-  // Deploy InsuranceProtocol contract using InsuranceProtocolFactory
-  const createInsuranceTransaction = await insuranceProtocolFactory.createInsuranceContract();
-  await createInsuranceTransaction.wait();
-
-  const userInsuranceContractAddress = await insuranceProtocolFactory.getUserInsuranceContract(deployer.address);
-  console.log("InsuranceProtocol contract deployed for user", deployer.address, "at:", userInsuranceContractAddress);
+  console.log("Deployment completed!");
 }
 
-// Execute the deployment
 main()
-  .then(() => console.log("Deployment completed successfully."))
-  .catch((error) => console.error("Deployment error:", error));
-
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
