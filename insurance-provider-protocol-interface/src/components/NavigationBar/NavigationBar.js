@@ -46,8 +46,14 @@ const NavigationBar = () => {
           isMenuOpen ? 'block' : 'hidden'
         } sm:flex sm:space-x-4 sm:space-y-0 mt-4 sm:mt-0`}
       >
-        <li className={`${location.pathname === '/' ? 'bg-green-900' : ''} rounded`}>
+        <li className={`${location.pathname === '/' ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500' : ''} rounded`}>
           <Link to="/">Home</Link>
+        </li>
+        <li className={`${location.pathname === '/insure-a-wallet' ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500' : ''} rounded`}>
+          <Link to="/">Insure Wallet</Link>
+        </li>
+        <li className={`${location.pathname === '/insure-loan-collateral' ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500' : ''} rounded`}>
+          <Link to="/">Insure Collateral</Link>
         </li>
       </ul>
     </nav>

@@ -20,20 +20,16 @@ const WalletConnection = ({ onConnect }) => {
         }
     };
 
-    const handleNavigateToContractDeployment = () => {
-        navigate('/register-organization-token');
+    const handleNavigateToinsureWallet = () => {
+        navigate('/insure-a-wallet');
     };
 
-    const handleNavigateToTokenVesting = () => {
-        navigate('/add-stakeholder-and-vesting');
+    const handleNavigateToInsureCollateral = () => {
+        navigate('/insure-loan-collateral');
     };
 
-    const handleNavigateToWithdrawals = () => {
-        navigate('/make-withdrawal');
-    };
-
-    const handleNavigateToWhitelisting = () => {
-        navigate('/whitelist-addresses');
+    const handleNavigateToAdminDashboard = () => {
+        navigate('/admin-dashboard');
     };
 
     return (
@@ -53,37 +49,26 @@ const WalletConnection = ({ onConnect }) => {
                 )}
                 {walletConnected && (
                     <div className='flex flex-col items-center justify-center'>
-                        <h6 className="text-sm text-center text-white font-bold mb-2">
-                            <span className="text-red-500 bg-white">Attention!</span> The first 3 buttons initiate "admin only" transactions.
-                            <br></br>
-                            All other categories of users can initiate withdrawal of available tokens using the 4th (yellow) button, provided they are whitelisted.
-                        </h6>
+        
                         <button
-                            className="bg-blue-700 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mt-2"
-                            onClick={handleNavigateToContractDeployment}
+                            className="bg-yellow-400 hover:bg-yellow-300 text-white font-bold py-2 px-4 rounded mt-2"
+                            onClick={handleNavigateToinsureWallet}
                         >
-                            Connected! Click here to register an organization afresh
+                            Connected! Click here to subscribe to an insurance plan for your cryptocurrency wallet
                         </button>
 
                         <button
-                            className="bg-red-700 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mt-2"
-                            onClick={handleNavigateToTokenVesting}
+                            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mt-2 mb-20"
+                            onClick={handleNavigateToInsureCollateral}
                         >
-                            Already Registered? Get your contract address and click here to continue
+                            Subscribe to a collateral protection insurance plan for a crypto-backed loan
                         </button>
 
                         <button
-                            className="bg-blue-700 hover:bg-blue-600 mb-20 text-white font-bold py-2 px-4 rounded mt-2"
-                            onClick={handleNavigateToWhitelisting}
+                            className="bg-yellow-400 hover:bg-yellow-300 text-white font-bold py-2 px-4 rounded mt-20"
+                            onClick={handleNavigateToAdminDashboard}
                         >
-                            Whitelist addresses
-                        </button>
-
-                        <button
-                            className="bg-yellow-700 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded mt-20"
-                            onClick={handleNavigateToWithdrawals}
-                        >
-                            Not an admin and got tokens to claim? Click here to make withdrawals
+                            Resricted! Admin-only transactions here
                         </button>
                     </div>
                 )}
