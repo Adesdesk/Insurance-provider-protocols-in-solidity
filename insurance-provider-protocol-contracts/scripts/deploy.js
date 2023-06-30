@@ -8,14 +8,14 @@ const hre = require("hardhat");
 const { ethers } = require("hardhat");
 
 async function main() {
-  const [deployer, escrow, testAccount] = await ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
   console.log("Deploying CollateralProtectionFactory with the account:", deployer.address);
   
   const CollateralProtectionFactory = await ethers.getContractFactory("CollateralProtectionFactory");
   
   // Set the address of the escrow to be used as the constructor argument
-  const escrowAddress = escrow.address;
+  const escrowAddress = '0xa1B94ef0f24d7F4fd02285EFcb9202E6C6EC655B';
 
   // Deploy the CollateralProtectionFactory contract
   const collateralProtectionFactory = await CollateralProtectionFactory.deploy(escrowAddress);

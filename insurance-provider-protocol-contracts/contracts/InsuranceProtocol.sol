@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.19;
 
-contract InsuranceContract {
+contract InsuranceProtocol {
     address public contractOwner;
-    uint256 constant private regularPremium = 100000 wei;
-    uint256 constant private robustPremium = 1000000 wei;
-    uint256 constant private comprehensivePremium = 100000 wei;
+    uint256 constant private regularPremium = 100 wei;
+    uint256 constant private robustPremium = 120 wei;
+    uint256 constant private comprehensivePremium = 150 wei;
     uint256 constant private paymentInterval = 28 days;
 
     enum InsurancePackage {Regular, Robust, Comprehensive}
@@ -109,15 +109,18 @@ contract InsuranceContract {
     // Calculate the total premium amount due
     uint256 totalPremiumAmountDue = premiumsDue * user.premiumAmount;
 
-    // Transfer premium amount to the contract owner
-    require(msg.value >= totalPremiumAmountDue, "Insufficient premium amount.");
-    (bool success, ) = contractOwner.call{value: totalPremiumAmountDue}("");
-    require(success, "Premium transfer failed.");
-
-    // Update last payment timestamp
+    // Update last payment timestamp before the external call
     user.lastPaymentTimestamp = paymentDue;
 
     // Update total payments made by the user
     user.totalPayments += premiumsDue;
-    }
+
+    // Transfer premium amount to the contract owner
+    require(msg.value >= totalPremiumAmountDue, "Insufficient premium amount.");
+
+    // Make the external call at the end
+    (bool success, ) = contractOwner.call{value: totalPremiumAmountDue}("");
+    require(success, "Premium transfer failed.");
+}
+
 }

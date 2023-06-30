@@ -1,44 +1,68 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
-describe("InsuranceContractFactory", function () {
-  let factory;
-  let contractInstance;
+describe('InsuranceContract', function () {
+  let insuranceContract;
+  let contractOwner;
+  let user;
 
-  before(async function () {
-    const InsuranceContractFactory = await ethers.getContractFactory("InsuranceContractFactory");
-    factory = await InsuranceContractFactory.deploy();
-    await factory.deployed();
+  beforeEach(async function () {
+    const InsuranceContract = await ethers.getContractFactory('InsuranceContract');
+    [contractOwner, user] = await ethers.getSigners();
+
+    insuranceContract = await InsuranceContract.deploy();
+    await insuranceContract.deployed();
   });
 
-  it("Should deploy an instance of InsuranceContract", async function () {
-    await factory.createInsuranceContract();
+  it('should allow the user to select a valid insurance package', async function () {
+    const InsurancePackage = {
+      Regular: 0,
+      Robust: 1,
+      Comprehensive: 2,
+    };
 
-    const deployedContracts = await factory.getDeployedContracts();
-    expect(deployedContracts.length).to.equal(1);
+    const packageSelected = InsurancePackage.Regular;
+    const premiumAmount = 100;
 
-    const contractAddress = deployedContracts[0];
-    const InsuranceContract = await ethers.getContractFactory("InsuranceContract");
-    contractInstance = await InsuranceContract.attach(contractAddress);
+    await insuranceContract.connect(user).selectPackage(packageSelected, {
+      value: premiumAmount,
+    });
+
+    const userPackage = await insuranceContract.users(user.address).package;
+    expect(userPackage).to.equal(packageSelected);
   });
 
-  it("Should select an insurance package", async function () {
-    const selectedPackage = 1; // Numerical value associated with the 'Robust' enum value
-  
-    await contractInstance.selectPackage(selectedPackage);
-    const user = await contractInstance.users(await contractInstance.contractOwner());
-    
-    expect(user.package).to.equal(selectedPackage);
-    expect(user.isActive).to.equal(true);
+  it('should reject selection of an invalid insurance package', async function () {
+    const invalidPackage = 3;
+    const premiumAmount = 100;
+
+    await expect(
+      insuranceContract.connect(user).selectPackage(invalidPackage, {
+        value: premiumAmount,
+      })
+    ).to.be.revertedWith('Invalid insurance package selected.');
   });
 
-  it("Should submit and approve a claim", async function () {
-    await contractInstance.submitClaim();
-    const claimStatus = await contractInstance.claims(await contractInstance.contractOwner());
-    expect(claimStatus).to.equal(contractInstance.ClaimStatus.Pending);
+  it('should not allow the user to select a package if already active', async function () {
+    const InsurancePackage = {
+      Regular: 0,
+      Robust: 1,
+      Comprehensive: 2,
+    };
 
-    await contractInstance.approveClaim(await contractInstance.contractOwner());
-    const approvedClaimStatus = await contractInstance.claims(await contractInstance.contractOwner());
-    expect(approvedClaimStatus).to.equal(contractInstance.ClaimStatus.Approved);
+    const packageSelected = InsurancePackage.Regular;
+    const premiumAmount = 100;
+
+    await insuranceContract.connect(user).selectPackage(packageSelected, {
+      value: premiumAmount,
+    });
+
+    await expect(
+      insuranceContract.connect(user).selectPackage(packageSelected, {
+        value: premiumAmount,
+      })
+    ).to.be.revertedWith('User already has an active insurance package.');
   });
+
+  // Add more tests for other contract functions
 });
