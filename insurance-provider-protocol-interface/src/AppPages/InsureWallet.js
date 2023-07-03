@@ -1,101 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import InsuranceProtocolFactory from '../contracts/InsuranceProtocolFactory.json';
-// import { useNavigate } from 'react-router-dom';
-import NavigationBar from '../components/NavigationBar/NavigationBar.js';
+import NavigationBar from '../components/NavigationBar/NavigationBar';
 
-const InsureWallet = ({ wallet }) => {
-//   const navigate = useNavigate();
-  const [contract, setContract] = useState(null);
-  const [deployedContracts, setDeployedContracts] = useState([]);
-  const [walletConnectionStatus, setWalletConnectionStatus] = useState('');
-  const [deploymentStatus, setDeploymentStatus] = useState('');
+const InsureWallet = ({ wallet, onContractDeploy }) => { 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [contractAddress, setContractAddress] = useState('');
 
-  useEffect(() => {
-    // Initialize the contract and provider
-    const initialize = async () => {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-    
-        //const network = await provider.getNetwork();
-    
-        // Create a new contract instance
-        const contractAddress = '0x3f2ec6863CF90Cf6B39FCC08E1ef317Aa98A7ECc';
-        //const instance = new ethers.Contract(contractAddress, InsuranceProtocolFactory.abi, signer);
-        const instance = new ethers.Contract(contractAddress, InsuranceProtocolFactory.abi, signer);
-    
-        setContract(instance);
-        await fetchDeployedContracts(instance);
-        } catch (error) {
-        console.error('Error initializing contract:', error);
+  const FactoryContractAddress = '0x1bcB765f0c508d69e5bFDAae6602843Fd55FB306';
+
+  const handleCreateInsuranceContract = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      if (window.ethereum) {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+
+        const factoryContract = new ethers.Contract(
+          FactoryContractAddress,
+          InsuranceProtocolFactory.abi,
+          signer
+        );
+
+        const existingContractAddress = await factoryContract.getContractByOwner(wallet.address);
+
+        if (existingContractAddress !== ethers.constants.AddressZero) {
+          setContractAddress(existingContractAddress);
+        } else {
+          await factoryContract.createInsuranceContract();
+          onContractDeploy(existingContractAddress); 
+          setSuccess(true);
         }
-    };
-    if (wallet) {
-        initialize();
-      }
-    }, [wallet]);
-  
-
-  // Fetch deployed contracts
-  const fetchDeployedContracts = async (instance) => {
-    try {
-      const deployedContractAddresses = await instance.getDeployedContracts();
-      setDeployedContracts(deployedContractAddresses);
-    } catch (error) {
-      console.error('Error fetching deployed contracts:', error);
-    }
-  };
-
-  // Create a new InsuranceProtocol contract
-  const createInsuranceContract = async () => {
-    try {
-      if (contract) {
-        await contract.createInsuranceContract();
-        await fetchDeployedContracts(contract);
+      } else {
+        setError('Please connect a wallet');
       }
     } catch (error) {
-      console.error('Error creating InsuranceProtocol contract:', error);
+      setError('Failed to create insurance contract');
     }
+
+    setLoading(false);
   };
 
   return (
     <div>
       <NavigationBar />
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-fuchsia-500">
-        <div className="flex flex-col items-center">
-        {deploymentStatus && (
-                        <div className="mt-4 text-yellow-500 text-center">
-                            <p>{deploymentStatus}</p>
-                        </div>
-                    )}
-        
-          <div className="flex flex-col items-center p-4 rounded-md shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Cyrptocurrency Wallet Insurance Contracts</h2>
-            <button
-              className="bg-gray-700 text-white font-medium px-4 py-2"
-              onClick={createInsuranceContract}
-            >
-              Create Insurance Contract
-            </button>
-            <br></br>
+        <h1 className="text-4xl font-bold mb-6 text-white">Insure a Cryptocurrency Wallet</h1>
 
-            <h6 className="text-blue-900">List of deployed contracts.</h6>
+        {loading && <p>Transaction processing...</p>}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {success && (
+          <>
+            <p className="text-gray-700 mb-4">An insurance contract has been successfully created for you!</p>
+            <p className="text-gray-700 mb-4">Your contract address: {contractAddress}</p>
+          </>
+        )}
 
-            {deployedContracts.length > 0 ? (
-              <ul className="mt-4">
-                {deployedContracts.map((contractAddress, index) => (
-                  <li key={index}>{contractAddress}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-blue-900">None available yet.</p>
-            )}
-          </div>
-        </div>
+        {contractAddress === '' && (
+          <button
+            onClick={handleCreateInsuranceContract}
+            className="bg-white text-gray-800 font-bold py-2 px-4 rounded-full shadow-lg"
+            disabled={loading}
+          >
+            Instantiate Your Custom Insurance Contract
+          </button>
+        )}
       </div>
     </div>
   );
 };
-
 export default InsureWallet;
