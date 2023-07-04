@@ -11,9 +11,9 @@ contract InsuranceProtocolFactory {
     function createInsuranceContract() external {
         require(!hasContract[msg.sender], "Contract already exists for this address");
 
-        address newContract = address(new InsuranceProtocol());
-        deployedContracts.push(newContract);
-        contractOwners[msg.sender] = newContract;
+        InsuranceProtocol newContract = new InsuranceProtocol();
+        deployedContracts.push(address(newContract));
+        contractOwners[msg.sender] = address(newContract);
         hasContract[msg.sender] = true;
     }
 

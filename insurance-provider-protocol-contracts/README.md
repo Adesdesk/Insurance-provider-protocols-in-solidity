@@ -14,4 +14,4 @@ npx hardhat run scripts/deploy.js
 
 
 Deploying InsuranceProtocolFactory with the account: 0x4076D1614357208C73AA620E7aAD09B17FEc59Ad
-InsuranceProtocolFactory contract deployed to: 0x8A85544b11ad7E6F274F13eEF4628EC2dDd313DB
+InsuranceProtocolFactory contract deployed to: 0x57A5394b0F18f9DFb3b9Fc4B3C4EE2a0Bba0dd3f
