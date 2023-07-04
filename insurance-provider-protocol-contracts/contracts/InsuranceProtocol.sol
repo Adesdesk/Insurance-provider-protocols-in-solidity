@@ -3,9 +3,9 @@ pragma solidity 0.8.19;
 
 contract InsuranceProtocol {
     address public contractOwner;
-    uint256 constant private regularPremium = 10;
-    uint256 constant private robustPremium = 20;
-    uint256 constant private comprehensivePremium = 50;
+    uint256 constant private regularPremium = 1000;
+    uint256 constant private robustPremium = 10000;
+    uint256 constant private comprehensivePremium = 100000;
     uint256 constant private paymentInterval = 28 days;
 
     enum InsurancePackage {Regular, Robust, Comprehensive}
@@ -57,19 +57,8 @@ contract InsuranceProtocol {
     function submitClaim() external {
         require(users[msg.sender].isActive, "User does not have an active insurance package.");
         require(claims[msg.sender] == ClaimStatus.Pending, "Claim has already been submitted or processed.");
-
         claims[msg.sender] = ClaimStatus.Pending;
     }
-/*
-    function approveClaim(address _user) external onlyContractOwner {
-        require(users[_user].isActive, "User does not have an active insurance package.");
-        require(claims[_user] == ClaimStatus.Pending, "No pending claim for this user.");
-
-        claims[_user] = ClaimStatus.Approved;
-        uint256 claimPayout = users[_user].totalPayments * 2; // Payout value is twice the total payments made by the user
-        (bool success, ) = _user.call{value: claimPayout}("");
-        require(success, "Claim payout failed.");
-    }*/
 
     function approveClaim(address _user) external onlyContractOwner {
         require(users[_user].isActive, "User does not have an active insurance package.");
@@ -95,40 +84,29 @@ contract InsuranceProtocol {
         users[msg.sender].isActive = false;
     }
 
-    // function withdrawFunds() external onlyContractOwner {
-    //     revert("Withdrawal is not allowed.");
-    // }
 
-    function getContractBalance() external view returns (uint256) {
-        return address(this).balance;
-    }
-
-    function checkPremiumPayment() external payable {
+    function payPremiumToOwner() external payable {
         User storage user = users[msg.sender];
         require(user.isActive, "User does not have an active insurance package.");
-
+        
         uint256 elapsedTime = block.timestamp - user.lastPaymentTimestamp;
         uint256 missedPayments = elapsedTime / paymentInterval;
         uint256 paymentDue = user.lastPaymentTimestamp + (missedPayments * paymentInterval);
-
+        
         require(block.timestamp >= paymentDue, "Premium payment is not yet due.");
-
+        
         // Calculate the number of premiums due
         uint256 premiumsDue = missedPayments + 1;
-
+        
         // Calculate the total premium amount due
         uint256 totalPremiumAmountDue = premiumsDue * user.premiumAmount;
-
-        // Update last payment timestamp before the external call
+        
+        // Update last payment timestamp and total payments made by the user
         user.lastPaymentTimestamp = paymentDue;
-
-        // Update total payments made by the user
         user.totalPayments += premiumsDue;
-
+        
         // Transfer premium amount to the contract owner
         require(msg.value >= totalPremiumAmountDue, "Insufficient premium amount.");
-
-        // Make the external call at the end
         (bool success, ) = contractOwner.call{value: totalPremiumAmountDue}("");
         require(success, "Premium transfer failed.");
     }
