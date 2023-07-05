@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "./InsuranceProtocol.sol";
+import "./WalletInsurance.sol";
 
-contract InsuranceProtocolFactory {
-    address public verifierCompany;
+contract WalletInsuranceFactory {
+    address payable public verifierCompany;
     address[] public deployedContracts;
     mapping(address => address) public contractOwners;
     mapping(address => bool) public hasContract;
 
-    constructor(address _verifierCompany) {
+    constructor(address payable _verifierCompany) {
         verifierCompany = _verifierCompany;
     }
 
@@ -19,7 +19,7 @@ contract InsuranceProtocolFactory {
             "Contract already exists for this address"
         );
 
-        InsuranceProtocol newContract = new InsuranceProtocol(verifierCompany);
+        WalletInsurance newContract = new WalletInsurance(verifierCompany);
         deployedContracts.push(address(newContract));
         contractOwners[msg.sender] = address(newContract);
         hasContract[msg.sender] = true;

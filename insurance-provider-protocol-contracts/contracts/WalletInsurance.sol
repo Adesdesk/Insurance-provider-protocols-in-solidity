@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-contract InsuranceProtocol {
-    address public verifierCompany;
+contract WalletInsurance {
+    address payable public verifierCompany;
     uint256 constant private regularPremium = 1000;
     uint256 constant private robustPremium = 10000;
     uint256 constant private comprehensivePremium = 100000;
@@ -22,7 +22,7 @@ contract InsuranceProtocol {
     mapping(address => User) public users;
     mapping(address => ClaimStatus) public claims;
 
-    constructor(address _verifierCompany) {
+    constructor(address payable _verifierCompany) {
         verifierCompany = _verifierCompany;
     }
 

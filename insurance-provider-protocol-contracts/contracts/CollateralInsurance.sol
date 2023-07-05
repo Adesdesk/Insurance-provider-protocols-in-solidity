@@ -2,13 +2,12 @@
 pragma solidity 0.8.19;
 
 contract CollateralInsurance {
-    address public owner;
-    uint256 public constant CATEGORY_A_PREMIUM = 100000;
-    uint256 public constant CATEGORY_B_PREMIUM = 10000;
+    address payable public verifierCompany;
+    uint256 public constant CATEGORY_A_PREMIUM = 100000 wei;
+    uint256 public constant CATEGORY_B_PREMIUM = 10000 wei;
     uint256 public constant PAYMENT_INTERVAL = 28 days;
-    uint256 public constant TOTAL_PAYMENT_PERIOD = 280 days;
-    uint256 public constant CATEGORY_A_MAX_COLLATERAL = 2 ether;
-    uint256 public constant CATEGORY_B_MAX_COLLATERAL = 4 ether;
+    uint256 public constant CATEGORY_A_MAX_COLLATERAL = 3 ether;
+    uint256 public constant CATEGORY_B_MAX_COLLATERAL = 2 ether;
 
     struct User {
         uint256 collateralAmount;
@@ -19,76 +18,70 @@ contract CollateralInsurance {
 
     mapping(address => User) public users;
 
-    constructor() {
-        owner = tx.origin; // prevent the owner address from changing with various deployers
+    constructor(address payable _verifierCompany) {
+        verifierCompany = _verifierCompany;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only the contract owner can call this function");
+    modifier onlyAdmin() {
+        require(msg.sender == verifierCompany, "Only the contract verifier can call this function");
         _;
     }
 
     // Function to allow users to set their collateral value and whether it has dropped
-    function setCollateralValue(bool hasDropped) external payable {
-        require(msg.value <= getCategoryMaxCollateral(), "Collateral value exceeds the limit");
+    function setCollateralValue(uint256 _collateralAmount) external payable {
+        require(_collateralAmount <= getCategoryMaxCollateral(), "Collateral value exceeds the limit");
+        users[msg.sender].collateralAmount = _collateralAmount;
+    }
 
-        users[msg.sender].collateralAmount = msg.value;
+    function setCollateralStatus(bool hasDropped) external payable {
+        require(users[msg.sender].collateralAmount > 0, "No collateral value set");
         users[msg.sender].hasDropped = hasDropped;
         users[msg.sender].isApproved = false;
     }
 
+
     // Function for Category A users to pay the premium every 28 days
     function payPremiumCategoryA() external payable {
         require(users[msg.sender].collateralAmount > 0, "No collateral value set");
-        require(users[msg.sender].collateralAmount <= CATEGORY_A_MAX_COLLATERAL, "Collateral value exceeds the limit");
-        require(!users[msg.sender].hasDropped, "Collateral value has dropped");
+        require(users[msg.sender].collateralAmount <= CATEGORY_A_MAX_COLLATERAL, "Collateral value exceeds the limit for Category A");
 
-        uint256 currentPaymentPeriod = (block.timestamp - users[msg.sender].lastPaymentTimestamp) / PAYMENT_INTERVAL;
-        require(currentPaymentPeriod < TOTAL_PAYMENT_PERIOD / PAYMENT_INTERVAL, "Payment period expired");
+        require(msg.value >= CATEGORY_A_PREMIUM, "Incorrect premium amount");
 
-        uint256 premiumAmount = CATEGORY_A_PREMIUM * (currentPaymentPeriod + 1);
-        require(msg.value >= premiumAmount, "Insufficient premium payment");
-
-        users[msg.sender].lastPaymentTimestamp = block.timestamp;
-
-        if (currentPaymentPeriod == (TOTAL_PAYMENT_PERIOD / PAYMENT_INTERVAL) - 1) {
-            uint256 refundAmount = msg.value - premiumAmount;
-            if (refundAmount > 0) {
-                payable(msg.sender).transfer(refundAmount);
-            }
+        if (users[msg.sender].lastPaymentTimestamp == 0) {
+            users[msg.sender].lastPaymentTimestamp = block.timestamp;
+        } else {
+            require(block.timestamp >= users[msg.sender].lastPaymentTimestamp + PAYMENT_INTERVAL, "Payment interval not reached");
+            users[msg.sender].lastPaymentTimestamp = block.timestamp;
         }
+
+        verifierCompany.transfer(msg.value); // Transfer the premium amount to the verifier company
     }
 
     // Function for Category B users to pay the premium every 28 days
     function payPremiumCategoryB() external payable {
         require(users[msg.sender].collateralAmount > 0, "No collateral value set");
-        require(users[msg.sender].collateralAmount <= CATEGORY_B_MAX_COLLATERAL, "Collateral value exceeds the limit");
-        require(!users[msg.sender].hasDropped, "Collateral value has dropped");
+        require(users[msg.sender].collateralAmount <= CATEGORY_B_MAX_COLLATERAL, "Collateral value is within the limit for Category A");
 
-        uint256 currentPaymentPeriod = (block.timestamp - users[msg.sender].lastPaymentTimestamp) / PAYMENT_INTERVAL;
-        require(currentPaymentPeriod < TOTAL_PAYMENT_PERIOD / PAYMENT_INTERVAL, "Payment period expired");
+        require(msg.value >= CATEGORY_B_PREMIUM, "Incorrect premium amount");
 
-        uint256 premiumAmount = CATEGORY_B_PREMIUM * (currentPaymentPeriod + 1);
-        require(msg.value >= premiumAmount, "Insufficient premium payment");
-
-        users[msg.sender].lastPaymentTimestamp = block.timestamp;
-
-        if (currentPaymentPeriod == (TOTAL_PAYMENT_PERIOD / PAYMENT_INTERVAL) - 1) {
-            uint256 refundAmount = msg.value - premiumAmount;
-            if (refundAmount > 0) {
-                payable(msg.sender).transfer(refundAmount);
-            }
+        if (users[msg.sender].lastPaymentTimestamp == 0) {
+            users[msg.sender].lastPaymentTimestamp = block.timestamp;
+        } else {
+            require(block.timestamp >= users[msg.sender].lastPaymentTimestamp + PAYMENT_INTERVAL, "Payment interval not reached");
+            users[msg.sender].lastPaymentTimestamp = block.timestamp;
         }
+
+        verifierCompany.transfer(msg.value); // Transfer the premium amount to the verifier company
     }
 
     // Function for the contract owner to approve or decline a user's collateral value
-    function approveCollateral(address userAddress, bool isApproved) external onlyOwner {
-        require(users[userAddress].collateralAmount > 0, "No collateral value set");
+    function approveCollateral(address userAddress, bool isApproved) external onlyAdmin {
+        require(users[userAddress].collateralAmount > 0, "No collateral valueset");
 
         users[userAddress].isApproved = isApproved;
 
         if (isApproved) {
-            payable(userAddress).transfer(users[userAddress].collateralAmount);
+            verifierCompany.transfer(users[userAddress].collateralAmount); // Transfer the collateral amount to the user
         }
     }
 
