@@ -44,7 +44,6 @@ contract CollateralInsurance {
     function payPremiumCategoryA() external payable {
         require(users[msg.sender].collateralAmount > 0, "No collateral value set");
         require(users[msg.sender].collateralAmount <= CATEGORY_A_MAX_COLLATERAL, "Collateral value exceeds the limit for Category A");
-
         require(msg.value >= CATEGORY_A_PREMIUM, "Incorrect premium amount");
 
         if (users[msg.sender].lastPaymentTimestamp == 0) {
