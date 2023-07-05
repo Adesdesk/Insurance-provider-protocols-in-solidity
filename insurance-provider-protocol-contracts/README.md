@@ -31,7 +31,7 @@ npm install
 
 ### Executing program
 
-* Once done, run the following commands in the same order, so as to start a local blockchain node and see the code work in various test cases
+* Once done, run the following commands in the same order, one on each split side of your terminal, so as to start a local blockchain node and see the code work in various test cases
 ```
 npx hardhat node
 npx hardhat test
