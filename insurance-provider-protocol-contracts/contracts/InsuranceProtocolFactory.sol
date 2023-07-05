@@ -4,20 +4,30 @@ pragma solidity 0.8.19;
 import "./InsuranceProtocol.sol";
 
 contract InsuranceProtocolFactory {
+    address public verifierCompany;
     address[] public deployedContracts;
     mapping(address => address) public contractOwners;
     mapping(address => bool) public hasContract;
 
-    function createInsuranceContract() external {
-        require(!hasContract[msg.sender], "Contract already exists for this address");
+    constructor(address _verifierCompany) {
+        verifierCompany = _verifierCompany;
+    }
 
-        InsuranceProtocol newContract = new InsuranceProtocol();
+    function createInsuranceContract() external {
+        require(
+            !hasContract[msg.sender],
+            "Contract already exists for this address"
+        );
+
+        InsuranceProtocol newContract = new InsuranceProtocol(verifierCompany);
         deployedContracts.push(address(newContract));
         contractOwners[msg.sender] = address(newContract);
         hasContract[msg.sender] = true;
     }
 
-    function getContractByOwner(address walletAddress) external view returns (address) {
+    function getContractByOwner(
+        address walletAddress
+    ) external view returns (address) {
         return contractOwners[walletAddress];
     }
 

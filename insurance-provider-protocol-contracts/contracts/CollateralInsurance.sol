@@ -20,7 +20,7 @@ contract CollateralInsurance {
     mapping(address => User) public users;
 
     constructor() {
-        owner = tx.origin;
+        owner = tx.origin; // prevent the owner address from changing with various deployers
     }
 
     modifier onlyOwner() {
