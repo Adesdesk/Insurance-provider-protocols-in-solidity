@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+/**
+ * @title CollateralInsurance Smart Contract
+ * @author Adeola David Adelakun
+ * @notice This contract implements an insurance service that offers users up to 3 varieties of insurance policies in a 
+ * WalletInsurance.sol smart contract. Users can choose one of the 3 packages namely Regular, Robust, and Comprehensive, 
+ * all provided in a custom data type (enum InsurancePackage). 
+ * The packages require users to pay an insurance amount of 1000wei, 10000wei and 100000wei respectively, every 28 days. 
+ * The contract also recognizes an admin (the insurance company) to whose address all insurance amounts are paid. 
+ * This admin gets to approve that a user be able to claim up to 2 times the total amount they have ever paid as premium, 
+ * in a case that they raise a claim as a result of compromise to their insured wallet. The admin judges this and may approve 
+ * or decline user claims.
+ */
+
 contract WalletInsurance {
     address payable public verifierCompany;
     uint256 constant private regularPremium = 1000;

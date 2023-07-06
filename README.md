@@ -6,13 +6,17 @@ Insurance-provider-protocols-in-solidity
 
 A set of blockchain-based insurance provider protocols consisting of crypto wallet insurance and collateral protection (for crypto backed loans) components.
 
-* The cryptocurrency wallet insurance protocol
-This protocol implements an insurance service that offers users up to 3 varieties of insurance policies in a WalletInsurance.sol smart contract. Users can choose one of the 3 packages namely Regular, Robust, and Comprehensive, all provided in a custom data type (enum InsurancePackage). The packages require users to pay an insurance amount of 1000wei, 10000wei and 100000wei respectively, every 28 days. The contract also recognizes an admin (the insurance company) to whose address all insurance amounts are paid. This admin gets to approve that a user be able to claim up to 2 times the total amount they have ever paid as premium, in a case that they raise a claim as a result of compromise to their insured wallet. The admin judges this and may approve or decline user claims. 
-The contract WalletInsuranceFactory.sol is a factory contract that enables each user to create their own instance of the WalletInsurance contract and this keeps track of corresponding owners for each instance of the contract they deploy
+* The cryptocurrency wallet insurance protocol.
 
-* The crypto backed loan collateral insurance Protocol
+This protocol implements an insurance service that offers users up to 3 varieties of insurance policies in a WalletInsurance.sol smart contract. Users can choose one of the 3 packages namely Regular, Robust, and Comprehensive, all provided in a custom data type (enum InsurancePackage). The packages require users to pay an insurance amount of 1000wei, 10000wei and 100000wei respectively, every 28 days. The contract also recognizes an admin (the insurance company) to whose address all insurance amounts are paid. This admin gets to approve that a user be able to claim up to 2 times the total amount they have ever paid as premium, in a case that they raise a claim as a result of compromise to their insured wallet. The admin judges this and may approve or decline user claims. 
+
+The contract WalletInsuranceFactory.sol is a factory contract that enables each user to create their own instance of the WalletInsurance contract and this keeps track of corresponding owners for each instance of the contract they deploy.
+
+* The crypto backed loan collateral insurance Protocol.
+
 This protocol on the other hand implements an insurance service that offers users up to 2 varieties of insurance policies in a CollateralInsurance.sol smart contract. Users can choose one of the 2 packages namely CATEGORY_A_PREMIUM and CATEGORY_B_PREMIUM. The packages require users to pay an insurance amount of 100000wei and 10000wei respectively, every 28 days. The contract also recognizes an admin (the insurance company) to whose address all insurance amounts are paid. This admin gets to approve that a user who opted for CATEGORY_A_PREMIUM is able to claim up to 3 ether worth of loan collateral value, while a user who opted for CATEGORY_B_PREMIUM is able to claim up to 2 ether worth of loan collateral value. The prerequisite to claiming the funds is yet an approval by the insurance company who would verify that there was a drop in collateral value. The admin may approve or decline user claims.
-The contract CollateralInsuranceFactory.sol is a factory contract that enables each user to create their own instance of the CollateralInsurance contract and this keeps track of corresponding owners for each instance of the contract they deploy
+
+The contract CollateralInsuranceFactory.sol is a factory contract that enables each user to create their own instance of the CollateralInsurance contract and this keeps track of corresponding owners for each instance of the contract they deploy.
 
 ## Getting Started
 * Open your favorite terminal and change the current working directory to the location where you want this repository to be cloned.

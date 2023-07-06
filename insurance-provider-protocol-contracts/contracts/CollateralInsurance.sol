@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+/**
+ * @title Smart Contract
+ * @author Adeola David Adelakun
+ * @notice This smart contract implements an insurance service that offers users up to 2 varieties of insurance 
+ * policies in a CollateralInsurance.sol smart contract. Users can choose one of the 2 packages namely CATEGORY_A_PREMIUM and 
+ * CATEGORY_B_PREMIUM. The packages require users to pay an insurance amount of 100000wei and 10000wei respectively, every 
+ * 28 days. The contract also recognizes an admin (the insurance company) to whose address all insurance amounts are paid. 
+ * This admin gets to approve that a user who opted for CATEGORY_A_PREMIUM is able to claim up to 3 ether worth of loan 
+ * collateral value, while a user who opted for CATEGORY_B_PREMIUM is able to claim up to 2 ether worth of loan collateral value. The prerequisite to claiming the funds is yet an approval by the insurance company who would verify that there was a drop in collateral value. The admin may approve or decline user claims.
+ */
+
 contract CollateralInsurance {
     address payable public verifierCompany;
     uint256 public constant CATEGORY_A_PREMIUM = 100000 wei;

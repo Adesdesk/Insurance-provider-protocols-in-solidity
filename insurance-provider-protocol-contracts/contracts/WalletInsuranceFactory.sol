@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+/**
+ * @title WalletInsuranceFactory Smart Contract
+ * @author Adeola David Adelakun
+ * @notice The contract WalletInsuranceFactory.sol is a factory contract that enables each user to create their own instance 
+ * of the WalletInsurance contract and this keeps track of corresponding owners for each instance of the contract they deploy.
+ */
+
 import "./WalletInsurance.sol";
 
 contract WalletInsuranceFactory {

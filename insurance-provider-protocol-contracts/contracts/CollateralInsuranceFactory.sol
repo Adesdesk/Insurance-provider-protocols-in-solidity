@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+/**
+ * @title CollateralInsuranceFactory Smart Contract
+ * @author Adeola David Adelakun
+ * @notice The contract CollateralInsuranceFactory.sol is a factory contract that enables each user to create their own instance 
+ * of the CollateralInsurance contract and this keeps track of corresponding owners for each instance of the contract they deploy.
+ */
+
 import "./CollateralInsurance.sol";
 
 contract CollateralInsuranceFactory {
