@@ -11,15 +11,16 @@ pragma solidity 0.8.19;
 import "./WalletInsurance.sol";
 
 contract WalletInsuranceFactory {
-    address payable public verifierCompany;
-    address[] public deployedContracts;
-    mapping(address => address) public contractOwners;
-    mapping(address => bool) public hasContract;
+    address payable public verifierCompany; // Address of the verifier company
+    address[] public deployedContracts; // Stores the addresses of all deployed WalletInsurance contracts
+    mapping(address => address) public contractOwners; // Maps user addresses to their corresponding WalletInsurance contract addresses
+    mapping(address => bool) public hasContract; // Tracks whether a user has deployed a WalletInsurance contract
 
     constructor(address payable _verifierCompany) {
         verifierCompany = _verifierCompany;
     }
 
+    // Function to create a new instance of the WalletInsurance contract for the caller
     function createInsuranceContract() external {
         require(
             !hasContract[msg.sender],
@@ -32,12 +33,12 @@ contract WalletInsuranceFactory {
         hasContract[msg.sender] = true;
     }
 
-    function getContractByOwner(
-        address walletAddress
-    ) external view returns (address) {
+    // Function to get the WalletInsurance contract address associated with a specific owner
+    function getContractByOwner(address walletAddress) external view returns (address) {
         return contractOwners[walletAddress];
     }
 
+    // Function to get all deployed WalletInsurance contract addresses
     function getDeployedContracts() external view returns (address[] memory) {
         return deployedContracts;
     }

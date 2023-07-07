@@ -38,12 +38,13 @@ contract CollateralInsurance {
         _;
     }
 
-    // Function to allow users to set their collateral value and whether it has dropped
+    // Function to allow users to set their collateral value
     function setCollateralValue(uint256 _collateralAmount) external payable {
         require(_collateralAmount <= getCategoryMaxCollateral(), "Collateral value exceeds the limit");
         users[msg.sender].collateralAmount = _collateralAmount;
     }
 
+    // Function to allow users to set whether collateral value has dropped
     function setCollateralStatus(bool hasDropped) external payable {
         require(users[msg.sender].collateralAmount > 0, "No collateral value set");
         users[msg.sender].hasDropped = hasDropped;
@@ -86,7 +87,7 @@ contract CollateralInsurance {
 
     // Function for the contract owner to approve or decline a user's collateral value
     function approveCollateral(address userAddress, bool isApproved) external onlyAdmin {
-        require(users[userAddress].collateralAmount > 0, "No collateral valueset");
+        require(users[userAddress].collateralAmount > 0, "No collateral value set");
 
         users[userAddress].isApproved = isApproved;
 

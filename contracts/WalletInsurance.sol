@@ -47,6 +47,7 @@ contract WalletInsurance {
         _;
     }
 
+    // Function for users to select an insurance package and make the premium payment
     function selectPackage(InsurancePackage _package) external payable {
         require(
             _package >= InsurancePackage.Regular && _package <= InsurancePackage.Comprehensive,
@@ -62,6 +63,7 @@ contract WalletInsurance {
         user.isActive = true;
         user.lastPaymentTimestamp = block.timestamp;
 
+        // Set the premium amount based on the selected insurance package
         if (_package == InsurancePackage.Regular) {
             user.premiumAmount = regularPremium;
         } else if (_package == InsurancePackage.Robust) {
@@ -78,7 +80,9 @@ contract WalletInsurance {
         (bool success, ) = verifierCompany.call{value: msg.value}("");
         require(success, "Premium transfer failed.");
     }
+    
 
+    // Function for users to submit a claim for their insured wallet
     function submitClaim() external {
         require(
             users[msg.sender].isActive,
@@ -91,6 +95,7 @@ contract WalletInsurance {
         claims[msg.sender] = ClaimStatus.Pending;
     }
 
+    // Function for the admin to approve a user's claim and transfer the claim payout
     function approveClaim(address _user) external onlyAdmin {
         require(
             users[_user].isActive,
@@ -107,6 +112,7 @@ contract WalletInsurance {
         require(success, "Claim payout failed.");
     }
 
+    // Function for the admin to reject a user's claim
     function rejectClaim(address _user) external onlyAdmin {
         require(
             users[_user].isActive,
@@ -120,6 +126,7 @@ contract WalletInsurance {
         claims[_user] = ClaimStatus.Rejected;
     }
 
+    // Function for users to cancel their insurance package
     function cancelInsurance() external {
         require(
             users[msg.sender].isActive,
@@ -129,6 +136,7 @@ contract WalletInsurance {
         users[msg.sender].isActive = false;
     }
 
+    // Function for users to pay their premium to the verifier company
     function payPremiumToVerifier() external payable {
         User storage user = users[msg.sender];
         require(
